@@ -2,9 +2,11 @@ contract DateTime =
   /*
    Date and Time utilities for sophia contracts
   */
+
   record date_time = {year : int,
                       month : int,
                       day : int,
+                      hour : int,
                       minute : int,
                       second : int,
                       weekday : int}
@@ -27,47 +29,70 @@ contract DateTime =
      }
 
   private function init_date_time() : date_time =
-    {year = state.origin_year,
+    {year = 0,
      month = 0,
      day = 0,
+     hour = 0,
      minute = 0,
      second = 0,
      weekday = 0
      }
 
   public function parse_timestamp(timestamp : int) : date_time =
+    // init datetime structure
     let date_time = init_date_time()
+
     // year
-    let date_time = date_time{year = get_year()}
-    let buf = leap_year_before(year) - leap_year_before(state.origin_year)
+    let date_time = date_time{year = get_year(timestamp)}
     
-    let seconds_accounted_for = 0 + state.leap_year_in_seconds * buf
-    let seconds_accounted_for = seconds_accounted_for + year_in_seconds*(year - state.origin_year - buf)
-     
     // month
-    let begin = 1
-    let end = 12
-    let date_time = date_time{month = for_month(begin, end, timestamp, seconds_accounted_for)}
+    let date_time = date_time{month = get_month(timestamp)}
     
     // day
+    let date_time = date_time{day = get_day(timestamp)}
+    
+    // hour
+    let date_time = date_time{hour = get_hour(timestamp)}
+    
+    // minute
+    let date_time = date_time{minute = get_minute(timestamp)}
+    
+    // second
+    let date_time = date_time{second = get_second(timestamp)}
+    
+    // weekday
+    let date_time = date_time{weekday = get_weekday(timestamp)}
+    date_time
 
-  public function get_year(timestamp : int) : int =
+  public function get_year(timestamp : int) : int = 
     let year = state.origin_year + timestamp/state.year_in_seconds
     let num_leap_years = leap_year_before(year) - leap_year_before(state.origin_year)
     
-    let seconds_accounted_for = 0 + state.leap_year_in_seconds*num_leap_years
+    let seconds_accounted_for = state.leap_year_in_seconds*num_leap_years
     let seconds_accounted_for = seconds_accounted_for + state.year_in_seconds*(year-state.origin_year - num_leap_years)
    
     get_year'(seconds_accounted_for, timestamp, year)
+
+  public function get_month(timestamp : int) : int = 2
+
+  public function get_day(timestamp : int) : int = 3
+
+  public function get_hour(timestamp : int) : int = 4
+
+  public function get_minute(timestamp : int) : int = 5
+
+  public function get_second(timestamp : int) : int = 6
+
+  public function get_weekday(timestamp : int) : int = 7
     
   private function get_year'(seconds_accounted_for : int, timestamp : int, year : int) : int =
-    let tmp_seconds_accounted_for = 0
     if(seconds_accounted_for > timestamp)
-      if(is_leap_year(year-1))
-        let tmp_seconds_accounted_for = seconds_accounted_for - state.leap_year_in_seconds
-      else
-        let tmp_seconds_accounted_for = seconds_accounted_for - state.year_in_seconds
-      get_year'(tmp_seconds_accounted_for,  timestamp, year - 1)
+      let seconds_accounted_for =
+        if(is_leap_year(year-1))
+          seconds_accounted_for - state.leap_year_in_seconds
+        else
+          seconds_accounted_for - state.year_in_seconds
+      get_year'(seconds_accounted_for,  timestamp, year - 1)
     else
       year
     
@@ -84,13 +109,14 @@ contract DateTime =
       false
     else
       true   
-    
+  /*  
   private function for_month(begin, end, timestamp, seconds_accounted_for) =
     let seconds_in_month = state.day_in_seconds * get_days_in_month
     if((begin =< end) || (seconds_in_month + seconds_accounted_for > timestamp))
       begin
     else
       for_month(begin + 1, end, timestamp, seconds_accounted_for + seconds_in_month)
+  */
     
   public function get_days_in_month(month : int, year : int) : int =
     if(month == 1 || month == 3 || month == 5 || month == 7 || month == 8 || 
