@@ -111,7 +111,7 @@ contract DateTime =
     let timestamp = leap_years_in_sec + years_in_sec
 
     // calculate timestamp by given month
-    let timestamp = month_to_timestamp(1, year, month, timestamp)
+    let timestamp = month_to_timestamp(1, year, month - 1, timestamp)
 
     // calculate timestamp by given day
     let timestamp = timestamp + (day - 1) * state.day_in_seconds
@@ -120,10 +120,10 @@ contract DateTime =
     let timestamp = timestamp + hour * state.hour_in_seconds
 
     // calculate timestamp by given minute
-    let timestamp = timestamp * minute * state.minute_in_seconds
+    let timestamp = timestamp + minute * state.minute_in_seconds
 
     // calculate timestamp by given second
-    let timestamp = timestamp + second
+    let timestamp = timestamp + second  
     timestamp
 
 
@@ -205,7 +205,7 @@ contract DateTime =
                         [11] = 30,
                         [12] = 31}
 
-    if(from < month)
+    if(from =< month)
       month_to_timestamp(from + 1, year, month, timestamp + day_in_month[from] * state.day_in_seconds)
     else
       timestamp
