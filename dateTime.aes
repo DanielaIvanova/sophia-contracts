@@ -73,8 +73,8 @@ contract DateTime =
     let dt : date_time = dt{second = rest(timestamp, 60)}
 
     // calculate weekday by given timestamp
-    let weekday = rest(timestamp / state.day_in_seconds + 4, 7)
-    let dt : date_time = dt{weekday = weekday}
+    let wd : int = rest(timestamp / state.day_in_seconds + 4, 7)
+    let dt : date_time = dt{weekday = wd}
     dt
 
   public function get_year(timestamp : int) : int =
@@ -126,7 +126,6 @@ contract DateTime =
     let timestamp = timestamp + second  
     timestamp
 
-
 // Private functions and internal logic
   private function init_date_time(timestamp : int) : date_time =
     {
@@ -150,7 +149,9 @@ contract DateTime =
       month = 0,
       day = 0,
       leap_years_before = total_leap_years_before,
-      seconds_accounted_for = seconds_accounted_for + state.year_in_seconds * (year - state.origin_year - total_leap_years_before),
+      seconds_accounted_for = 
+        seconds_accounted_for + state.year_in_seconds * 
+        (year - state.origin_year - total_leap_years_before),
       timestamp = timestamp
       }
 
@@ -168,15 +169,17 @@ contract DateTime =
       b
 
   private function p_get_month(b : buff) : buff =
-    let buf : buff = b{month = p_get_month'(1, 12, b)}
+    let buf : buff = p_get_month'(1, 12, b)
     buf
 
-  private function p_get_month'(begin : int, end : int, b : buff) : int =
+  private function p_get_month'(begin : int, end : int, b : buff) : buff =
     let seconds_in_month = state.day_in_seconds * get_days_in_month(begin, b.year)
     if((begin >= end) || (seconds_in_month + b.seconds_accounted_for > b.timestamp))
-      begin
+      let b = b{month = begin}
+      b
     else
-      let buf : buff = b{seconds_accounted_for = b.seconds_accounted_for + seconds_in_month}
+      let buf : buff = 
+        b{seconds_accounted_for = b.seconds_accounted_for + seconds_in_month}
       p_get_month'(begin + 1, end, buf)
 
   private function p_get_day(b : buff) : buff =
