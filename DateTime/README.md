@@ -1,0 +1,34 @@
+# Date and Time Sophia smart contract
+
+## Sophia Date and Time smart contract overview
+Sophia contract which implements utilities that eases the work with date-time related job. There are functionality for getting year, month, day, hour, minute, second and weekday from timestamp and vice versa. 
+The contract is made using [forgAE project](https://github.com/aeternity/aepp-forgae-js) with tests included.
+
+## Prerequisites
+Ensure that you have installed [forgAE project](https://github.com/aeternity/aepp-forgae-js)
+
+## How to start the node localy
+`forgae node`
+
+## How to deploy the contract
+`forgae deploy`
+
+This command will deploy the contract in the local network.
+The configuration of deployment is written in `deploy.js` file.
+
+In our case the output is:
+```
+===== Contract: DateTime.aes has been deployed =====
+{ owner: 'ak_2mwRmUeYmfuW93ti9HMSUJzCk1EYcQEfikVSzgo6k2VghsWhgU',
+  transaction: 'th_RT3BTt6eiVNKkgjw2vW1pjFFvQ99SwM4ogQHMDcL5Zdawdnn2',
+  address: 'ct_HVb6d4kirgqzY1rShmzRTRwukcsXobjHcpLVD2EggoHmn6wt2',
+  call: [Function],
+  callStatic: [Function],
+  createdAt: 2019-01-11T08:11:11.236Z }
+Your deployment script finished successfully!
+```
+
+## How to run tests
+`forgae test`
+
+All tests should be passing.
