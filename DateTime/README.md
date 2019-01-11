@@ -1,7 +1,7 @@
 # Date and Time Sophia smart contract
 
 ## Sophia Date and Time smart contract overview
-Sophia contract which implements utilities that eases the work with date-time related job. There are functionality for getting year, month, day, hour, minute, second and weekday from timestamp and vice versa. 
+Sophia contract which implements utilities that eases the work with date-time related job. There is a functionality for getting year, month, day, hour, minute, second and weekday from timestamp and vice versa. 
 The contract is made using [forgAE project](https://github.com/aeternity/aepp-forgae-js) with tests included.
 
 ## Prerequisites
