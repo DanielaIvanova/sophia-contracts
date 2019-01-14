@@ -156,6 +156,374 @@ describe('Date Time', () => {
   })
 
   describe('Call Date Time', () => {
+    it('Test get_year', async () => {
+      const array = [
+        { year: 1974, timestamp: 126230400 },
+        { year: 1982, timestamp: 410227199 },
+        { year: 1988, timestamp: 599615999 },
+        { year: 2004, timestamp: 1104537599 },
+        { year: 2018, timestamp: 1514764800 },
+        { year: 2025, timestamp: 1767225599 },
+        { year: 2032, timestamp: 1956528000 },
+      ]
+
+      const compiledContract = await owner.contractCompile(contractSource, {
+        gas: config.gas,
+      })
+
+      const deployPromise = compiledContract.deploy({
+        options: {
+          ttl: config.ttl,
+        },
+      })
+      assert.isFulfilled(
+        deployPromise,
+        'Could not deploy the ExampleContract Smart Contract'
+      )
+
+      let contract = await deployPromise
+
+      async function withdrawYear(item) {
+        const result = await contract.call('get_year', {
+          args: `(${item.timestamp})`,
+          options: { ttl: config.ttl },
+          abi: 'sophia',
+        })
+        return result
+      }
+
+      async function decodeYear(item) {
+        const result = await item.decode('int')
+        return result
+      }
+
+      async function processArray(array) {
+        let years = []
+        let results = []
+
+        for (const item of array) {
+          results.push(await withdrawYear(item))
+        }
+
+        for (const res of results) {
+          years.push(await decodeYear(res))
+        }
+
+        return years.map(el => el.value)
+      }
+      const decodedYears = await processArray(array)
+      const mockupYears = array.map(item => item.year)
+
+      assert.deepEqual(decodedYears, mockupYears)
+    })
+  })
+
+  describe('Call Date Time', () => {
+    it('Test get_month', async () => {
+      const array = [
+        { month: 12, timestamp: 63071999 },
+        { month: 2, timestamp: 65750400 },
+        { month: 7, timestamp: 18316799 },
+        { month: 6, timestamp: 13046400 },
+        { month: 8, timestamp: 84153599 },
+      ]
+
+      const compiledContract = await owner.contractCompile(contractSource, {
+        gas: config.gas,
+      })
+
+      const deployPromise = compiledContract.deploy({
+        options: {
+          ttl: config.ttl,
+        },
+      })
+      assert.isFulfilled(
+        deployPromise,
+        'Could not deploy the ExampleContract Smart Contract'
+      )
+
+      let contract = await deployPromise
+
+      async function withdrawMonth(item) {
+        const result = await contract.call('get_month', {
+          args: `(${item.timestamp})`,
+          options: { ttl: config.ttl },
+          abi: 'sophia',
+        })
+        return result
+      }
+
+      async function decodeMonths(item) {
+        const result = await item.decode('int')
+        return result
+      }
+
+      async function processArray(array) {
+        let months = []
+        let results = []
+
+        for (const item of array) {
+          results.push(await withdrawMonth(item))
+        }
+
+        for (const res of results) {
+          months.push(await decodeMonths(res))
+        }
+
+        return months.map(el => el.value)
+      }
+      const decodedMonths = await processArray(array)
+      const mockupMonths = array.map(item => item.month)
+
+      assert.deepEqual(decodedMonths, mockupMonths)
+    })
+  })
+
+  describe('Call Date Time', () => {
+    it('Test get_day', async () => {
+      const array = [
+        { day: 14, timestamp: 1547476268 },
+        { day: 4, timestamp: 1507075200 },
+        { day: 7, timestamp: 581644800 },
+        { day: 26, timestamp: 1458950400 },
+        { day: 30, timestamp: 1209513600 },
+      ]
+
+      const compiledContract = await owner.contractCompile(contractSource, {
+        gas: config.gas,
+      })
+
+      const deployPromise = compiledContract.deploy({
+        options: {
+          ttl: config.ttl,
+        },
+      })
+      assert.isFulfilled(
+        deployPromise,
+        'Could not deploy the ExampleContract Smart Contract'
+      )
+
+      let contract = await deployPromise
+
+      async function withdrawDay(item) {
+        const result = await contract.call('get_day', {
+          args: `(${item.timestamp})`,
+          options: { ttl: config.ttl },
+          abi: 'sophia',
+        })
+        return result
+      }
+
+      async function decodeDays(item) {
+        const result = await item.decode('int')
+        return result
+      }
+
+      async function processArray(array) {
+        let days = []
+        let results = []
+
+        for (const item of array) {
+          results.push(await withdrawDay(item))
+        }
+
+        for (const res of results) {
+          days.push(await decodeDays(res))
+        }
+
+        return days.map(el => el.value)
+      }
+      const decodedDays = await processArray(array)
+      const mockupDays = array.map(item => item.day)
+
+      assert.deepEqual(decodedDays, mockupDays)
+    })
+  })
+
+  describe('Call Date Time', () => {
+    it('Test get_hour', async () => {
+      const array = [
+        { hour: 6, timestamp: 63093600 },
+        { hour: 10, timestamp: 63111599 },
+        { hour: 17, timestamp: 63136799 },
+        { hour: 20, timestamp: 63147599 },
+        { hour: 22, timestamp: 63154799 },
+      ]
+
+      const compiledContract = await owner.contractCompile(contractSource, {
+        gas: config.gas,
+      })
+
+      const deployPromise = compiledContract.deploy({
+        options: {
+          ttl: config.ttl,
+        },
+      })
+      assert.isFulfilled(
+        deployPromise,
+        'Could not deploy the ExampleContract Smart Contract'
+      )
+
+      let contract = await deployPromise
+
+      async function withdrawHour(item) {
+        const result = await contract.call('get_hour', {
+          args: `(${item.timestamp})`,
+          options: { ttl: config.ttl },
+          abi: 'sophia',
+        })
+        return result
+      }
+
+      async function decodeHours(item) {
+        const result = await item.decode('int')
+        return result
+      }
+
+      async function processArray(array) {
+        let hours = []
+        let results = []
+
+        for (const item of array) {
+          results.push(await withdrawHour(item))
+        }
+
+        for (const res of results) {
+          hours.push(await decodeHours(res))
+        }
+
+        return hours.map(el => el.value)
+      }
+      const decodedHours = await processArray(array)
+      const mockupHours = array.map(item => item.hour)
+
+      assert.deepEqual(decodedHours, mockupHours)
+    })
+  })
+
+  describe('Call Date Time', () => {
+    it('Test get_second', async () => {
+      const array = [
+        { second: 59, timestamp: 63071999 },
+        { second: 6, timestamp: 63072006 },
+        { second: 17, timestamp: 63072017 },
+        { second: 23, timestamp: 63072023 },
+        { second: 28, timestamp: 63072028 },
+      ]
+
+      const compiledContract = await owner.contractCompile(contractSource, {
+        gas: config.gas,
+      })
+
+      const deployPromise = compiledContract.deploy({
+        options: {
+          ttl: config.ttl,
+        },
+      })
+      assert.isFulfilled(
+        deployPromise,
+        'Could not deploy the ExampleContract Smart Contract'
+      )
+
+      let contract = await deployPromise
+
+      async function withdrawSecond(item) {
+        const result = await contract.call('get_second', {
+          args: `(${item.timestamp})`,
+          options: { ttl: config.ttl },
+          abi: 'sophia',
+        })
+        return result
+      }
+
+      async function decodeSeconds(item) {
+        const result = await item.decode('int')
+        return result
+      }
+
+      async function processArray(array) {
+        let seconds = []
+        let results = []
+
+        for (const item of array) {
+          results.push(await withdrawSecond(item))
+        }
+
+        for (const res of results) {
+          seconds.push(await decodeSeconds(res))
+        }
+
+        return seconds.map(el => el.value)
+      }
+      const decodedSeconds = await processArray(array)
+      const mockupSeconds = array.map(item => item.second)
+
+      assert.deepEqual(decodedSeconds, mockupSeconds)
+    })
+  })
+
+  describe('Call Date Time', () => {
+    it('Test weekday', async () => {
+      const array = [
+        { weekday: 3, timestamp: 67737599 },
+        { weekday: 5, timestamp: 67824000 },
+        { weekday: 0, timestamp: 68083199 },
+        { weekday: 2, timestamp: 68169600 },
+        { weekday: 4, timestamp: 68342400 },
+      ]
+
+      const compiledContract = await owner.contractCompile(contractSource, {
+        gas: config.gas,
+      })
+
+      const deployPromise = compiledContract.deploy({
+        options: {
+          ttl: config.ttl,
+        },
+      })
+      assert.isFulfilled(
+        deployPromise,
+        'Could not deploy the ExampleContract Smart Contract'
+      )
+
+      let contract = await deployPromise
+
+      async function withdrawWeekday(item) {
+        const result = await contract.call('get_weekday', {
+          args: `(${item.timestamp})`,
+          options: { ttl: config.ttl },
+          abi: 'sophia',
+        })
+        return result
+      }
+
+      async function decodeWeekdays(item) {
+        const result = await item.decode('int')
+        return result
+      }
+
+      async function processArray(array) {
+        let weekdays = []
+        let results = []
+
+        for (const item of array) {
+          results.push(await withdrawWeekday(item))
+        }
+
+        for (const res of results) {
+          weekdays.push(await decodeWeekdays(res))
+        }
+
+        return weekdays.map(el => el.value)
+      }
+      const decodedWeekdays = await processArray(array)
+      const mockupWeekdays = array.map(item => item.weekday)
+
+      assert.deepEqual(decodedWeekdays, mockupWeekdays)
+    })
+  })
+
+  describe('Call Date Time', () => {
     it('Test to_timestamp function', async () => {
       const year = 2006
       const month = 7
