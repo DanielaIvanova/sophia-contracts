@@ -39,6 +39,47 @@ Your deployment script finished successfully!
 
 All tests should be passing.
 
+## How to integrate the library with your contract
+1. `DateTime` should be deployed and you have to take the address of the contract.
+
+2. You should decode the address to `hex`. You can use `aecli` to decode the address, for example:
+```
+aecli crypto decode ct_uH2C1ZWkkVeteqrcP6UtQoAwG3TGbsC6uBRgwiF3YdhgDJVmE
+```
+The output is: 
+```
+Decoded address (hex): 76b3153fed56f7bca175149e15bcb9e09e5e7df14f128f5c464a70f8e73b57b8
+```
+
+3. It should return the address in hex, which now can be used in your contract. You should add `0x` before it to designate it as hex.
+```
+0x76b3153fed56f7bca175149e15bcb9e09e5e7df14f128f5c464a70f8e73b57b8
+```
+
+4. Now you are ready to add some functions from our library in your own smart contract.
+```
+contract Remote = 
+  function get_year : (int) => int
+
+contract YourContract =
+  type state = ()
+  function main(timestamp : int, remote : Remote) : int = 
+    remote.get_year(timestamp)
+```
+**NOTE:** In this case we will be using `get_year` function from `DateTime` library.
+
+5. Deploy your contract and call `main` function with following arguments: 
+```
+main(0, 0x76b3153fed56f7bca175149e15bcb9e09e5e7df14f128f5c464a70f8e73b57b8)
+```
+
+6. It should return the year of `0` timestamp :
+```
+Result: 
+
+1970
+```
+
 ## Implemented functionality
 The library contains:
 1. `parse_timestamp(timestamp)`
