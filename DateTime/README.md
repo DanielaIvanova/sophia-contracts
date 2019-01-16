@@ -34,7 +34,7 @@ In our case the output is:
 Your deployment script finished successfully!
 ```
 
-## How to run tests
+## How to run the tests
 `forgae test`
 
 All tests should be passing.
