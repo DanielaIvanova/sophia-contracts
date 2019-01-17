@@ -1,0 +1,18 @@
+contract Remote =
+  function received_item : () => bool
+  function seller_contract_balance : () => int
+  function check_item_status : () => string
+  
+contract Buyer =
+  function deposit_to_seller_contract(amount : int, key : address) : bool =
+    Chain.spend(key, amount)
+    true
+    
+  function received_item(remote : Remote) : bool =
+    remote.received_item()
+    
+  function seller_contract_balance(remote : Remote) : int =
+    remote.seller_contract_balance()
+    
+  function check_item_status(remote : Remote) : string =
+    remote.check_item_status()

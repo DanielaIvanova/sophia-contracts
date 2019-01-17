@@ -1,0 +1,38 @@
+contract Seller =
+  record state = {seller_key : address, buyer_key: address, status : string, price : int}
+  
+  public stateful function init(bk : address, price : int) : state =
+    {seller_key = Call.caller, buyer_key = bk, status = "undefined", price = price }
+    
+  public stateful function send_item() : bool =
+    if(check_money())
+      put(state{status = "on_the_way"})
+      true
+    else
+      abort("Not enough money")
+      
+  public stateful function received_item() : bool =
+    if(Call.caller == state.buyer_key)
+      put(state{status = "delevered"})
+      Chain.spend(state.seller_key, state.price)
+      true
+    else
+      false
+      
+  public function key_balance() : int =
+    Chain.balance(Call.caller)
+    
+  public function seller_contract_balance() : int =
+    Contract.balance
+    
+  public function check_item_status() =
+    state.status
+
+  private function check_money() : bool =
+    if(Contract.balance >= state.price)
+      true
+    else
+      false
+    
+    
+     
