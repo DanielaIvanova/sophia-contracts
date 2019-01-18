@@ -23,6 +23,7 @@ const deploy = async (network, privateKey) => {
 
 	let buyer = await deployer.deploy("./contracts/BuyerContract.aes")
 	let seller = await deployer.deploy("./contracts/SellerContract.aes")
+	let transport = await deployer.deploy("./contracts/TransportsContract.aes")
 };
 
 module.exports = {
