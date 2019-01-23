@@ -7,10 +7,33 @@ const config = {
   gas: 200000,
   ttl: 55
 }
+async function deployContract (contractName, ...params) {
+  const [owner, gas, deployObj] = [params[0],params[1],params[2]]
+  const contractSource = utils.readFileRelative(`./contracts/${contractName}.aes`, 'utf-8')
+  const compileContract = await owner.contractCompile(contractSource, gas)
+  const deployPromiseContract = await compileContract.deploy(deployObj)
+  return deployPromiseContract
+}
+
+function decodeContractAddress (contract) {
+  const decoded58addres = Crypto.decodeBase58Check(contract.address.split('_')[1]).toString(
+    'hex'
+  )
+  return `0x${decoded58addres}`
+}
+
+async function callContract (contract, functionName, args, decodeType = 'int') {
+  const result = await contract.call(functionName, args)
+  const decodedResult = await result.decode(decodeType)
+  return decodedResult.value
+}
+
 
 describe('Contracts', () => {
   let owner
-
+  let BuyerContract
+  let SellerContract
+  let TransportContract
   before(async () => {
     const ownerKeyPair = wallets[0]
     owner = await Ae({
@@ -21,264 +44,177 @@ describe('Contracts', () => {
       networkId: 'ae_devnet'
     })
   })
-  describe('Buyer Contract', () => {
-    it('Deploying Contracts', async () => {
-      let sellerContractSource = utils.readFileRelative(
-        './contracts/SellerContract.aes',
-        'utf-8'
-      ) // Read the aes file
-      let buyerContractSource = utils.readFileRelative(
-        './contracts/BuyerContract.aes',
-        'utf-8'
-      )
-      let transportContractSource = utils.readFileRelative(
-        './contracts/TransportContract.aes',
-        'utf-8'
-      )
+  describe('Deploy contracts', () => {
+    it('should deploy Buyer contract', async () => {
+      const gas = {gas: config.gas}
+      const deployObj = {options: { ttl: config.ttl }}
+      BuyerContract = await deployContract('BuyerContract', owner, gas, deployObj)
+      assert(BuyerContract.hasOwnProperty('address'))
+      assert(BuyerContract.hasOwnProperty('owner')) 
+    })
 
-      // Buyer contract
-      const compiledBuyerContract = await owner.contractCompile(
-        buyerContractSource,
-        {
-          // Compile it
-          gas: config.gas
-        }
-      )
-
-      const deployPromiseBuyer = compiledBuyerContract.deploy({
-        // Deploy it
-        options: {
-          ttl: config.ttl
-        }
-      })
-
-      let BuyerContract = await deployPromiseBuyer
-      let addressBuyer =
-        '0x' +
-        Crypto.decodeBase58Check(BuyerContract.address.split('_')[1]).toString(
-          'hex'
-        )
-      console.log(addressBuyer)
-      // Seller contract
-      const compiledSellerContract = await owner.contractCompile(
-        sellerContractSource,
-        {
-          // Compile it
-          gas: config.gas
-        }
-      )
-
-      const deployPromiseSeller = compiledSellerContract.deploy({
-        // Deploy it
+    it('should deploy Seller contract', async () => {
+      const addressBuyer = decodeContractAddress(BuyerContract)
+      const gas = {gas: config.gas}
+      const deployObj = {
         initState: `(${addressBuyer}, 2000)`,
-        options: {
-          ttl: config.ttl
-        }
-      })
-
-      let SellerContract = await deployPromiseSeller
-      let addressSeller =
-        '0x' +
-        Crypto.decodeBase58Check(SellerContract.address.split('_')[1]).toString(
-          'hex'
-        )
-
-      // Transport contract
-      const compiledTransportContract = await owner.contractCompile(
-        transportContractSource,
-        {
-          // Compile it
-          gas: config.gas
-        }
-      )
-
-      const deployPromiseTransport = compiledTransportContract.deploy({
-        // Deploy it
+        options: { ttl: config.ttl }
+      }
+      SellerContract = await deployContract('SellerContract', owner, gas, deployObj)
+      assert(SellerContract.hasOwnProperty('address'))
+      assert(SellerContract.hasOwnProperty('owner')) 
+    })
+    
+    it('should deploy Transport contract', async () => {
+      const gas = {gas: config.gas}
+      const deployObj = {
         initState: `(1548074338, "Varna")`,
-        options: {
-          ttl: config.ttl
-        }
-      })
+        options: { ttl: config.ttl }
+      }
+      TransportContract = await deployContract('TransportContract', owner, gas, deployObj)
+      assert(TransportContract.hasOwnProperty('address'))
+      assert(TransportContract.hasOwnProperty('owner')) 
+    })
+  })
 
-      let TransportContract = await deployPromiseTransport
-      let addressTransport =
-        '0x' +
-        Crypto.decodeBase58Check(
-          TransportContract.address.split('_')[1]
-        ).toString('hex')
+  describe('Interact with contracts', () => {
+    let addressSeller
+    let addressTransport
+    before (() => {
+      addressSeller = decodeContractAddress(SellerContract)
+      addressTransport = decodeContractAddress(TransportContract)
+    })
+    it("should deposit tokens to seller's contract", async () => {
+      const args = {
+        args: `(2000, ${addressSeller})`,
+        options: { ttl: 55, amount: 2000 },
+        abi: 'sophia'
+      }
+      const result = await callContract(BuyerContract, 'deposit_to_seller_contract', args)
+      assert.equal(result, true)
+    })
 
-      await assert.isFulfilled(
-        deployPromiseBuyer,
-        'Could not deploy the ExampleContract Smart Contract'
-      ) // Check it is deployed
-
-      await assert.isFulfilled(
-        deployPromiseSeller,
-        'Could not deploy the ExampleContract Smart Contract'
-      ) // Check it is deployed
-
-      await assert.isFulfilled(
-        deployPromiseTransport,
-        'Could not deploy the ExampleContract Smart Contract'
-      ) // Check it is deployed
-
-      // function "deposit_to_seller_contract"
-      const CallPromiseResult = await BuyerContract.call(
-        'deposit_to_seller_contract',
-        {
-          args: `(2000, ${addressSeller})`,
-          options: { ttl: 55, amount: 2000 },
-          abi: 'sophia'
-        }
-      )
-      const result = await CallPromiseResult.decode('int')
-      assert.equal(result.value, true)
-
-      // function "seller_contract_balance"
-      const CallPromiseResultSeller = await SellerContract.call(
-        'seller_contract_balance',
-        {
-          options: { ttl: 55 },
-          abi: 'sophia'
-        }
-      )
-      const result1 = await CallPromiseResultSeller.decode('int')
-      assert.equal(result1.value, 2002)
-
-      // function "send_item"
-      const CallPromiseResultSeller1 = await SellerContract.call('send_item', {
+    it("should check seller's contract balance", async () => {
+      const args = {
         options: { ttl: 55 },
         abi: 'sophia'
-      })
-      const result2 = await CallPromiseResultSeller1.decode('bool')
-      assert.equal(result2.value, true)
+      }
+      const result = await callContract(SellerContract, 'seller_contract_balance', args)
+      assert.equal(result, 2002)
+    })
 
-      // function "check_item_status"
-      const CallPromiseResultSeller2 = await SellerContract.call(
-        'check_item_status',
-        {
-          options: { ttl: 55 },
-          abi: 'sophia'
-        }
-      )
-      const result3 = await CallPromiseResultSeller2.decode('string')
-      assert.equal(result3.value, 'sent_to_transport_courier')
+    it('should send item', async () => {
+      const args = {
+        options: { ttl: 55 },
+        abi: 'sophia'
+      }
+      const result = await callContract(SellerContract, 'send_item', args)
+      assert.equal(result, true)
+    })
 
-      // function "change_location"
-      const CallPromiseResultTransport = await TransportContract.call(
-        'change_location',
-        {
-          args: `(1548157482, "Burgas")`,
-          options: { ttl: 55 },
-          abi: 'sophia'
-        }
-      )
-      const result4 = await CallPromiseResultTransport.decode('bool')
-      assert.equal(result4.value, true)
+    it('should check item status', async () => {
+      const args = {
+        options: { ttl: 55 },
+        abi: 'sophia'
+      }
+      const result = await callContract(SellerContract, 'check_item_status', args, 'string')
+      assert.equal(result, 'sent_to_transport_courier')
+    })
 
-      // function "check_courier_status" from Transport Contract
-      const CallPromiseResultTransport1 = await TransportContract.call(
-        'check_courier_status',
-        {
-          options: { ttl: 55 },
-          abi: 'sophia'
-        }
-      )
-      const result5 = await CallPromiseResultTransport1.decode('string')
-      assert.equal(result5.value, 'on_way')
+    it('should change location', async () => {
+      const args = {
+        args: `(1548157482, "Burgas")`,
+        options: { ttl: 55 },
+        abi: 'sophia'
+      }
+      const result = await callContract(TransportContract, 'change_location', args, 'bool')
+      assert.equal(result, true)
+    })
 
-      // function "check_courier_location" from Transport Contract
-      const CallPromiseResultTransport2 = await TransportContract.call(
-        'check_courier_location',
-        {
-          options: { ttl: 55 },
-          abi: 'sophia'
-        }
-      )
-      const result6 = await CallPromiseResultTransport2.decode('string')
-      assert.equal(result6.value, 'Burgas')
+    it('should check courier status', async () => {
+      const args = {
+        options: { ttl: 55 },
+        abi: 'sophia'
+      }
+      const result = await callContract(TransportContract, 'check_courier_status', args, 'string')
+      assert.equal(result, 'on_way')
+    })
 
-      // function "check_courier_timestamp" from Transport Contract
-      const CallPromiseResultTransport3 = await TransportContract.call(
-        'check_courier_timestamp',
-        {
-          options: { ttl: 55 },
-          abi: 'sophia'
-        }
-      )
-      const result7 = await CallPromiseResultTransport3.decode('int')
-      assert.equal(result7.value, 1548157482)
+    it('should check courier location', async () => {
+      const args = {
+        options: { ttl: 55 },
+        abi: 'sophia'
+      }
+      const result = await callContract(TransportContract, 'check_courier_location', args, 'string')
+      assert.equal(result, 'Burgas')
+    })
 
-      // function "delivered_item"
-      const CallPromiseResultTransport4 = await TransportContract.call(
-        'delivered_item',
-        {
-          args: `(1548157980, "Sofia")`,
-          options: { ttl: 55 },
-          abi: 'sophia'
-        }
-      )
-      const result8 = await CallPromiseResultTransport4.decode('bool')
-      assert.equal(result8.value, true)
+    it('should check courier timestamp', async () => {
+      const args = {
+        options: { ttl: 55 },
+        abi: 'sophia'
+      }
+      const result = await callContract(TransportContract, 'check_courier_timestamp', args)
+      assert.equal(result, 1548157482)
+    })
 
-      // function "check_courier_location" from Buyer Contract
-      const CallPromiseResultBuyer5 = await BuyerContract.call(
-        'check_courier_location',
-        {
-          args: `${addressTransport}`,
-          options: { ttl: 55 },
-          abi: 'sophia'
-        }
-      )
-      const result9 = await CallPromiseResultBuyer5.decode('string')
-      assert.equal(result9.value, 'Sofia')
+    it('should deliver item', async () => {
+      const args = {
+        args: `(1548157980, "Sofia")`,
+        options: { ttl: 55 },
+        abi: 'sophia'
+      }
+      const result = await callContract(TransportContract, 'delivered_item', args, 'bool')
+      assert.equal(result, true)
+    })
 
-      // function "check_courier_status" from Buyer Contract
-      const CallPromiseResultBuyer6 = await BuyerContract.call(
-        'check_courier_status',
-        {
-          args: `${addressTransport}`,
-          options: { ttl: 55 },
-          abi: 'sophia'
-        }
-      )
-      const result10 = await CallPromiseResultBuyer6.decode('string')
-      assert.equal(result10.value, 'delivered')
+    it('should check courier location from Buyer contract', async () => {
+      const args = {
+        args: `${addressTransport}`,
+        options: { ttl: 55 },
+        abi: 'sophia'
+      }
+      const result = await callContract(BuyerContract, 'check_courier_location', args, 'string')
+      assert.equal(result, 'Sofia')
+    })
 
-      // function "check_courier_timestamp" from Buyer Contract
-      const CallPromiseResultBuyer7 = await BuyerContract.call(
-        'check_courier_timestamp',
-        {
-          args: `${addressTransport}`,
-          options: { ttl: 55 },
-          abi: 'sophia'
-        }
-      )
-      const result11 = await CallPromiseResultBuyer7.decode('int')
-      assert.equal(result11.value, 1548157980)
+    it('should check courier status from Buyer contract', async () => {
+      const args = {
+        args: `${addressTransport}`,
+        options: { ttl: 55 },
+        abi: 'sophia'
+      }
+      const result = await callContract(BuyerContract, 'check_courier_status', args, 'string')
+      assert.equal(result, 'delivered')
+    })
 
-      // function "received_item" from Buyer Contract
-      const CallPromiseResultSeller4 = await BuyerContract.call(
-        'received_item',
-        {
-          args: `(${addressSeller})`,
-          options: { ttl: 55 },
-          abi: 'sophia'
-        }
-      )
-      const result13 = await CallPromiseResultSeller4.decode('bool')
-      assert.equal(result13.value, true)
+    it('should check courier timestamp from Buyer contract', async () => {
+      const args = {
+        args: `${addressTransport}`,
+        options: { ttl: 55 },
+        abi: 'sophia'
+      }
+      const result = await callContract(BuyerContract, 'check_courier_timestamp', args)
+      assert.equal(result, 1548157980)
+    })
 
-      // function "seller_contract_balance" from Seller Contract
-      const ContractBalance = await SellerContract.call(
-        'seller_contract_balance',
-        {
-          options: { ttl: 55 },
-          abi: 'sophia'
-        }
-      )
-      const result14 = await ContractBalance.decode('int')
-      assert.equal(result14.value, 5)
+    it('should recieve item from Buyer contract', async () => {
+      const args = {
+        args: `(${addressSeller})`,
+        options: { ttl: 55 },
+        abi: 'sophia'
+      }
+      const result = await callContract(BuyerContract, 'received_item', args, 'bool')
+      assert.equal(result, true)
+    })
+    
+    it('should check seller ballance', async () => {
+      const args = {
+        options: { ttl: 55 },
+        abi: 'sophia'
+      }
+      const result = await callContract(SellerContract, 'seller_contract_balance', args)
+      assert.equal(result, 5)
     })
   })
 })
