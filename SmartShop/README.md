@@ -3,22 +3,22 @@
 ## Sophia SmartShop smart contract overview
 This project implements basic **Seller**, **Buyer** and **Transport** behaviors. 
 1. **SellerContract** implements the following functions: 
-`send_item()` - check if the buyer deposit the price needed to the sellers contract and passes to the transport courier.
-`received_item()` - the function has to be called from Buyer contract when the item is received.
+- `send_item()` - check if the buyer deposit the price needed to the sellers contract and passes to the transport courier.
+- `received_item()` - the function has to be called from Buyer contract when the item is received.
 
 2. **BuyerContract** implements following functions: 
-`deposit_to_seller_contract(price : int, key : address)` - the passing arguments are the price of the item and the contract seller address. 
+- `deposit_to_seller_contract(price : int, key : address)` - the passing arguments are the price of the item and seller's contract address. 
 There are functions implemented in Transport and Seller contracts, that we can call from Buyer contract, to check status of the item:
-`check_courier_status(transport_contract_address : address)` - will return the status of the order.
-`check_courier_location(transport_contract_address : address)` - will return the current location of the order.
-`check_courier_timestamp(transport_contract_address : address)` - will return the timestamp of last update.
+- `check_courier_status(transport_contract_address : address)` - will return the status of the order.
+- `check_courier_location(transport_contract_address : address)` - will return the current location of the order.
+- `check_courier_timestamp(transport_contract_address : address)` - will return the timestamp of last update.
 
-3. TransportContract implements following functions:
-`change_location(timestamp : int, city : string)` - updates last location of the item and timestamp.
-`delivered_item(timestamp : int, city : string)` - finishes the delivery process of the item.
-`check_courier_status()` - returns current delivery status.
-`check_courier_location` - returns current location status.
-`check_courier_timestamp()` - returns last updated timestamp.
+3. **TransportContract** implements following functions:
+- `change_location(timestamp : int, city : string)` - updates last location of the item and the timestamp.
+- `delivered_item(timestamp : int, city : string)` - finishes the delivery process of the item.
+- `check_courier_status()` - returns current delivery status.
+- `check_courier_location` - returns current location status.
+- `check_courier_timestamp()` - returns last updated timestamp.
 
 ## Workflow
 1. The Buyer shoud deploy the BuyerContract first.
@@ -38,17 +38,17 @@ Then, prepend `0x` to it:
 
 3. The Buyer should deposit the needed amount, by calling `deposit_to_seller_contract(price, address)`, which takes 2 arguments : `seller_contract_address` and `price_of_the_item`. The price is set by  the seller.
 
-4. The seller now should send an item, which will be redirected to transport courier. The function is `send_item()`. It checks if buyer had deposited the price of the item to the seller's contract.
+4. The seller now should send the item, which will be redirected to transport courier. The function is `send_item()`. It checks if buyer had deposited the price of the item to the seller's contract.
 
 5. Transport courier should deploy the TransportContract passing current `timestamp` and `location` as arguments. 
 
 6. Buyer can track the status of the item:
 
-`check_courier_status(transport_contract_address : address)` - returns current delivery status 
-`check_courier_location(transport_contract_address : address)` - returns current location status
-`check_courier_timestamp(transport_contract_address : address)` - returns last updated timestamp
+- `check_courier_status(transport_contract_address : address)` - returns current delivery status 
+- `check_courier_location(transport_contract_address : address)` - returns current location status
+- `check_courier_timestamp(transport_contract_address : address)` - returns last updated timestamp
 
-7. Once the item is delivered, the courier should call `delivered_item(timestamp : int, city : string)` functions, with current `timestamp`, and `location`.
+7. Once the item is delivered, the courier should call `delivered_item(timestamp : int, city : string)` function, with current `timestamp` and `location`.
 
 8. To finalize the order, buyer should call `received_item(buyer_contract_address)` function, with BuyerContract address.
 

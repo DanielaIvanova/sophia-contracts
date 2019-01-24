@@ -20,6 +20,3 @@ contract Transport =
 
   public function check_courier_timestamp() : int =
     state.timestamp
-  
-  
-    
