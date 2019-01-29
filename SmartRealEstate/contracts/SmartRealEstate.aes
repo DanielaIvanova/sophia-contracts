@@ -1,0 +1,60 @@
+contract SmartRealEstate =
+  record rent = {tenant : address, price : int, is_paid : bool, address : string}
+  type state = map(address, map(string, rent))
+  
+  public function init(price : int, name : string, address : string) : state = 
+    {[Call.caller] = {[name] = {tenant = Call.caller, price = price, is_paid = false, address = address}}}
+    
+  public stateful function pay_rent(owner : address, name : string) : bool =
+    // check if key of the owner exists
+    require(Map.member(owner, state), String.concat("owner does not exist : ", Address.to_str(owner)))
+
+    // check if the property exists
+    require(Map.member(name, state[owner]), "Owner's property does not exist")
+    
+    // check if is not paid
+    require(!state[owner][name].is_paid, "Rent is already paid")
+
+    let owner_property = 
+      switch(Map.lookup(name, state[owner]))
+        None => 
+          abort("No property")
+        Some(e) =>
+          e
+
+    // check if there is enoght money to pay/buy this rent
+    require(Contract.balance >= owner_property.price, String.concat("Not enough money to pay this rent: ", name))
+
+    Chain.spend(owner, owner_property.price)
+    
+    let updated_record = owner_property{tenant = Call.caller, is_paid = true}  
+    put(state{[owner][name] = updated_record})
+    
+    true
+
+  public function add_owner(name : string, price : int, address : string) : bool = 
+    put(state{[Call.caller]  =  {[name] = {tenant = Call.caller, price = price, is_paid = false , address = address}}})
+    true
+
+  public function delete_owner() : bool =
+    let new_state = Map.delete(Call.caller, state)
+    state{new_state}
+    true
+  
+//  public functin add_property(name, price,address) =
+//    put(state{[Call.caller] = {}})
+
+  public function get_rent_by_owner(owner : address) : rent =
+    require(Map.member(owner, state), "Owner does not exist")
+    Map.lookup(owner, state)
+      
+  public function check_is_paid(owner, name) : bool= 
+   	state[owner][name].is_paid
+    
+  public function get_tenant(owner, name) : address = 
+	state[owner][name].tenant
+    
+  private function require(b : bool, err : string) =
+    if(!b)
+      abort(err)
+      
