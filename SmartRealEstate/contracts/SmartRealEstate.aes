@@ -32,29 +32,70 @@ contract SmartRealEstate =
     
     true
 
-  public function add_owner(name : string, price : int, address : string) : bool = 
+  public stateful function add_owner(name : string, price : int, address : string) : bool = 
+    require(!Map.member(Call.caller, state), "The owner is already in the list of owners")
     put(state{[Call.caller]  =  {[name] = {tenant = Call.caller, price = price, is_paid = false , address = address}}})
     true
 
-  public function delete_owner() : bool =
-    let new_state = Map.delete(Call.caller, state)
-    state{new_state}
+  public stateful function delete_owner() : bool =
+   require(Map.member(Call.caller, state), "Owner does not exist")
+   put(Map.delete(Call.caller, state))
+   true
+  
+  public stateful function add_property(name : string, price : int, address : string) : bool =
+    require(!Map.member(name, state[Call.caller]), "The property is already in the list!")  
+    put(state{[Call.caller] @ current = current{[name] = {tenant = Call.caller, price = price, is_paid = false , address = address}}})
+    true
+
+  public stateful function delete_property(name : string) : bool =
+    require(Map.member(name, state[Call.caller]), "Property does not exist")
+    let updated_owners_properties = Map.delete(name, state[Call.caller])
+    put(state{[Call.caller] = updated_owners_properties})
+    true
+
+  public stateful function change_address(name : string, address : string) : bool = 
+    require(is_owner(name), "You don't own this property")
+    put(state{[Call.caller][name] @ current = current{address = address}})
     true
   
-//  public functin add_property(name, price,address) =
-//    put(state{[Call.caller] = {}})
-
-  public function get_rent_by_owner(owner : address) : rent =
-    require(Map.member(owner, state), "Owner does not exist")
-    Map.lookup(owner, state)
+  public stateful function change_price(name : string, price : int) : bool = 
+    require(is_owner(name), "You don't own this property")
+    put(state{[Call.caller][name] @ current = current{price = price}})
+    true
+    
+  public stateful function change_tenant(name : string, tenant : address) : bool =
+    require(is_owner(name), "You don't own this property")
+    put(state{[Call.caller][name] @ current = current{tenant = tenant}})
+    true
       
-  public function check_is_paid(owner, name) : bool= 
-   	state[owner][name].is_paid
+  public function get_payment_status(owner : address, name : string) : bool = 
+    if(Map.member(name, state[owner]))
+   	  state[owner][name].is_paid
+    else 
+      abort("Owner does not have this property")
+   	
+  public function get_property_address(owner : address, name : string) : string = 
+    if(Map.member(name, state[owner]))
+   	  state[owner][name].address
+    else 
+      abort("Owner does not have this property")
     
-  public function get_tenant(owner, name) : address = 
-	state[owner][name].tenant
-    
+  public function get_tenant(owner : address, name : string) : address = 
+    if(Map.member(name, state[owner]))
+   	  state[owner][name].tenant
+    else 
+      abort("Owner does not have this property")
+
+  public function get_price(owner : address, name : string) : int = 
+    if(Map.member(name, state[owner]))
+   	  state[owner][name].price
+    else 
+      abort("Owner does not have this property")
+
   private function require(b : bool, err : string) =
     if(!b)
       abort(err)
+
+  private function is_owner(name) : bool =
+    Map.member(name, state[Call.caller])
       
