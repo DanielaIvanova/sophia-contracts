@@ -7,7 +7,7 @@ contract SmartRealEstate =
     
   public stateful function pay_rent(owner : address, name : string) : bool =
     // check if key of the owner exists
-    require(Map.member(owner, state), String.concat("owner does not exist : ", Address.to_str(owner)))
+    require(Map.member(owner, state), "Owner does not exist")
 
     // check if the property exists
     require(Map.member(name, state[owner]), "Owner's property does not exist")

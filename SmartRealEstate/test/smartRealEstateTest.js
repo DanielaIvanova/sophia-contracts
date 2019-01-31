@@ -8,9 +8,8 @@ const config = {
   ttl: 55
 }
 
-// We have to have function to deploy our contract
-async function deployContract (contractName) {
-  // const [owner, gas, deployObj] = [params[0],params[1],params[2]]
+async function deployContract (contractName, ...params) {
+  const [owner, gas, deployObj] = [params[0], params[1], params[2]]
   const contractSource = utils.readFileRelative(
     `./contracts/${contractName}.aes`,
     'utf-8'
@@ -20,7 +19,6 @@ async function deployContract (contractName) {
   return deployPromiseContract
 }
 
-// TODO!!! Have to be not contract address!!! Key address
 function decodeAddress (key) {
   const decoded58addres = Crypto.decodeBase58Check(key.split('_')[1]).toString(
     'hex'
@@ -62,7 +60,8 @@ describe('SmartRealEstate Contract', () => {
         gas,
         deployObj
       )
-      // ............... Still have to be something
+      assert(SmartRealEstateContract.hasOwnProperty('address'))
+      assert(SmartRealEstateContract.hasOwnProperty('owner'))
     })
   })
 
@@ -70,7 +69,7 @@ describe('SmartRealEstate Contract', () => {
     let ownerAddress
 
     before(() => {
-      ownerAddress = decodeAddress(owner.keypair[1])
+      ownerAddress = decodeAddress(wallets[0].publicKey)
     })
 
     it('should delete owner', async () => {
@@ -78,27 +77,27 @@ describe('SmartRealEstate Contract', () => {
         options: { ttl: 55 },
         abi: 'sophia'
       }
-      const result = await callContract(SellerContract, 'delete_owner', args)
+      const result = await callContract(
+        SmartRealEstateContract,
+        'delete_owner',
+        args,
+        'bool'
+      )
       assert.equal(result, true)
     })
 
-    // TODO: not sure
-    it("should try to delete owner that does't exist", async () => {
-      const args = {
-        options: { ttl: 55 },
-        abi: 'sophia'
-      }
-      const result = await callContract(SellerContract, 'delete_owner', args)
-      assert.equal(result, 'Owner does not exist')
-    })
-
-    it('should creat owner', async () => {
+    it('should create owner', async () => {
       const args = {
         args: `("Villa Maria", 2000, "Sofia, 4 Str. K")`,
         options: { ttl: 55 },
         abi: 'sophia'
       }
-      const result = await callContract(SellerContract, 'add_owner', args)
+      const result = await callContract(
+        SmartRealEstateContract,
+        'add_owner',
+        args,
+        'bool'
+      )
       assert.equal(result, true)
     })
 
@@ -108,19 +107,13 @@ describe('SmartRealEstate Contract', () => {
         options: { ttl: 55 },
         abi: 'sophia'
       }
-      const result = await callContract(SellerContract, 'delete_property', args)
+      const result = await callContract(
+        SmartRealEstateContract,
+        'delete_property',
+        args,
+        'bool'
+      )
       assert.equal(result, true)
-    })
-
-    // TODO: not sure
-    it('should delete property', async () => {
-      const args = {
-        args: `("Stoyna house")`,
-        options: { ttl: 55 },
-        abi: 'sophia'
-      }
-      const result = await callContract(SellerContract, 'delete_property', args)
-      assert.equal(result, 'Property does not exist')
     })
 
     it('should add property', async () => {
@@ -129,63 +122,71 @@ describe('SmartRealEstate Contract', () => {
         options: { ttl: 55 },
         abi: 'sophia'
       }
-      const result = await callContract(SellerContract, 'add_property', args)
-      assert.equal(result, 'true')
+      const result = await callContract(
+        SmartRealEstateContract,
+        'add_property',
+        args,
+        'bool'
+      )
+      assert.equal(result, true)
     })
 
-    // TODO: Not sure the address!!
     it('should get property address', async () => {
       const args = {
-        args: `(${addressSeller}, "Artur apartment")`,
+        args: `(${ownerAddress}, "Artur apartment")`,
         options: { ttl: 55 },
         abi: 'sophia'
       }
       const result = await callContract(
-        SellerContract,
+        SmartRealEstateContract,
         'get_property_address',
-        args
+        args,
+        'string'
       )
       assert.equal(result, 'Varna, 123 Str. A')
     })
 
-    // TODO: Not sure the address!!
     it("should get property's paymentstatus", async () => {
       const args = {
-        args: `(${addressSeller}, "Artur apartment")`,
+        args: `(${ownerAddress}, "Artur apartment")`,
         options: { ttl: 55 },
         abi: 'sophia'
       }
       const result = await callContract(
-        SellerContract,
+        SmartRealEstateContract,
         'get_payment_status',
-        args
+        args,
+        'bool'
       )
-      assert.equal(result, 'false')
+      assert.equal(result, false)
     })
 
-    // TODO: The address ${addressSeller} has to be different format
     it("should get property's tenant", async () => {
       const args = {
-        args: `(${addressSeller}, "Artur apartment")`,
+        args: `(${ownerAddress}, "Artur apartment")`,
         options: { ttl: 55 },
         abi: 'sophia'
       }
       const result = await callContract(
-        SellerContract,
-        'get_payment_status',
-        args
+        SmartRealEstateContract,
+        'get_tenant',
+        args,
+        'address'
       )
-      assert.equal(result, `${addressSeller}`)
+      assert.equal(result, 39519965516565108473327470053407124751867067078530473195651550649472681599133)
     })
 
-    // TODO: Not sure the address!!
     it('should get price of the property', async () => {
       const args = {
-        args: `(${addressSeller}, "Artur apartment")`,
+        args: `(${ownerAddress}, "Artur apartment")`,
         options: { ttl: 55 },
         abi: 'sophia'
       }
-      const result = await callContract(SellerContract, 'get_price', args)
+      const result = await callContract(
+        SmartRealEstateContract,
+        'get_price',
+        args
+      )
       assert.equal(result, 1000)
     })
 
@@ -195,58 +196,118 @@ describe('SmartRealEstate Contract', () => {
         options: { ttl: 55 },
         abi: 'sophia'
       }
-      const result = await callContract(SellerContract, 'change_price', args)
-      assert.equal(result, 'true')
+      const result = await callContract(
+        SmartRealEstateContract,
+        'change_price',
+        args,
+        'bool'
+      )
+      assert.equal(result, true)
     })
 
-    // TODO: Not sure the address!!
     it('should get the new price of the property', async () => {
       const args = {
-        args: `(${addressSeller}, "Artur apartment")`,
+        args: `(${ownerAddress}, "Artur apartment")`,
         options: { ttl: 55 },
         abi: 'sophia'
       }
-      const result = await callContract(SellerContract, 'get_price', args)
+      const result = await callContract(
+        SmartRealEstateContract,
+        'get_price',
+        args
+      )
       assert.equal(result, 3000)
     })
 
     it('should change the address of the property', async () => {
       const args = {
-        args: `("Artur apartment", 'Sofia, 321 Str. B')`,
-        options: { ttl: 55 },
-        abi: 'sophia'
-      }
-      const result = await callContract(SellerContract, 'change_price', args)
-      assert.equal(result, 'true')
-    })
-
-    // TODO: Not sure the address!!
-    it('should get the new address of the property', async () => {
-      const args = {
-        args: `(${addressSeller}, "Artur apartment")`,
+        args: `("Artur apartment", "Sofia, 321 Str. B")`,
         options: { ttl: 55 },
         abi: 'sophia'
       }
       const result = await callContract(
-        SellerContract,
+        SmartRealEstateContract,
+        'change_address',
+        args,
+        'bool'
+      )
+      assert.equal(result, true)
+    })
+
+    it('should get the new address of the property', async () => {
+      const args = {
+        args: `(${ownerAddress}, "Artur apartment")`,
+        options: { ttl: 55 },
+        abi: 'sophia'
+      }
+      const result = await callContract(
+        SmartRealEstateContract,
         'get_property_address',
-        args
+        args,
+        'string'
       )
       assert.equal(result, 'Sofia, 321 Str. B')
+    })
+
+    it('should change the tenant of the property', async () => {
+      let newTenantAddress = decodeAddress(wallets[1].publicKey)
+      const args = {
+        args: `("Artur apartment", ${newTenantAddress})`,
+        options: { ttl: 55 },
+        abi: 'sophia'
+      }
+      const result = await callContract(
+        SmartRealEstateContract,
+        'change_tenant',
+        args,
+        'bool'
+      )
+      assert.equal(result, true)
+    })
+
+    it("should get the new tenant of the property", async () => {
+      const args = {
+        args: `(${ownerAddress}, "Artur apartment")`,
+        options: { ttl: 55 },
+        abi: 'sophia'
+      }
+      const result = await callContract(
+        SmartRealEstateContract,
+        'get_tenant',
+        args,
+        'address'
+      )
+      assert.equal(result, 52902161269465828228432141313057486257183400825031599431469406173824055923730)
     })
 
     it('should pay the rent', async () => {
       const args = {
-        args: `(${addressSeller}, "Artur apartment")`,
+        args: `(${ownerAddress}, "Artur apartment")`,
         options: { ttl: 55, amount: 3000 },
         abi: 'sophia'
       }
       const result = await callContract(
-        SellerContract,
-        'get_property_address',
-        args
+        SmartRealEstateContract,
+        'pay_rent',
+        args,
+        'bool'
       )
-      assert.equal(result, 'Sofia, 321 Str. B')
+      assert.equal(result, true)
+    })
+
+    it("should get property's paymentstatus after it was paid", async () => {
+      const args = {
+        args: `(${ownerAddress}, "Artur apartment")`,
+        options: { ttl: 55 },
+        abi: 'sophia'
+      }
+      const result = await callContract(
+        SmartRealEstateContract,
+        'get_payment_status',
+        args,
+        'bool'
+      )
+      assert.equal(result, true)
     })
   })
 })

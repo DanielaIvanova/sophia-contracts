@@ -5,6 +5,35 @@ This project implements basic back-end functionality for managing real estate.
 
 This smart contract has functionality to add a new owner, add a new owner to a new property, add a new property, changing and removing owners and owner's properties. When the contract is deployed, there will be a default record, where the deployer's key will be the owner of some predefined property.
 
+## Prerequisites
+Ensure that you have installed [forgAE project](https://github.com/aeternity/aepp-forgae-js)
+
+## How to deploy the contract
+`forgae deploy`
+
+This command will deploy the contract in the local network.
+The configuration of deployment is written in `deploy.js` file.
+
+## How to call functions with `owner` address as argument
+You should decode the address to `hex`. You can use `aecli` to decode the address, for example:
+```
+aecli crypto decode ak_6A2vcm1Sz6aqJezkLCssUXcyZTX7X8D5UwbuS2fRJr9KkYpRU
+```
+The output is: 
+```
+Decoded address (hex): 0bb4ed7927f97b51e1bcb5e1340d12335b2a2b12c8bc5221d63c4bcb39d41e61
+```
+
+ It should return the address in hex, which now can be used in your contract. You should add `0x` before it to designate it as hex.
+```
+0x0bb4ed7927f97b51e1bcb5e1340d12335b2a2b12c8bc5221d63c4bcb39d41e61
+```
+
+## How to run the tests
+`forgae test`
+
+All tests should be passing.
+
 ## Implemented functionality
 1. ` init(price, name, address)` - function initializes the state of SmartRealEstate. It takes `price`, `name`, and `address` and initializes the state with given arguments.
 2. `pay_rent(owner, name)` - function performs payment action. This function takes `owner` as a key of owner of the estate and a `name`, which is the name of owner's estate. Both `owner` and `name` should exist in the state of the smart contract and Contract's balance should be more or equal to the price needed to perform payment.
