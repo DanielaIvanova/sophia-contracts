@@ -1,0 +1,32 @@
+contract IntToBinary =
+  type state = string
+  
+  function init() =
+    ""
+    
+  function int_to_binary(x : int) = 
+    let l = []
+    divide(x, l)
+    
+  function divide(x : int, l : list(int)) =
+    if(x != 0)
+      let div = x mod 2
+      let l = div :: l
+      divide(x/2, l)
+    else
+      main(l)
+    
+  function main(l : list(int)) = 
+    put("")
+    map((x) => x, l)
+    state
+    
+  stateful function map(f : int => int, l : list(int)) : list(int) =
+    switch(l)
+     [] => 
+       []
+     e :: l' => 
+       put(String.concat(state, Int.to_str(e))) 
+       f(e) :: map(f, l')
+       
+        
