@@ -1,0 +1,84 @@
+contract Converter =
+  type state = string
+  
+  function init() =
+    ""
+  
+  // Convert decimal to binary
+  public function dec_to_binary(x : int) :state = 
+    let l : list(int) = []
+    divide(x, 2, l)
+
+  // Convert decimal to octal
+  public function dec_to_oct(x : int) :state = 
+    let l : list(int) = []
+    divide(x, 8, l) 
+
+  // Convert decimal to hexadecimal
+  public function dec_to_hex(x : int) :state = 
+    let l : list(int) = []
+    divide(x, 16, l)
+
+  // Convert binary to decimal
+  public function binary_to_dec(x : int) = 
+    let end : int = String.length(Int.to_str(x))
+    let l : list(int) = []
+    let l = binary_to_dec'(0, end, x, l)
+    sum(l, (x) => x)
+
+  private function binary_to_dec'(begin : int, end : int, x : int, l : list(int)) : list(int) =
+    if(begin < end)
+      let y : int = x mod 2
+      let x = x/10
+      let l = y :: l
+      binary_to_dec'(begin + 1, end, x, l)
+    else 
+      l
+
+  function sum(l : list('a), f : 'a => int) : int =
+    foldr((x, y) => x + y, 0, map(f, l))
+
+  function foldr(f : (('a, 'b) => 'b), z: 'b, l : list('a)) : 'b =
+    switch(l)
+      [] => z
+      e :: l' => f(e, foldr(f, z, l'))
+    
+  function map(f : 'a => 'b, l : list('a)) : list('b) =
+    switch(l)
+     [] => []
+     e :: l' => f(e) :: map(f, l')
+
+  private function divide(x : int, base : int, l : list(int)) : state =
+    if(x != 0)
+      let div = x mod base
+      let l = div :: l
+      divide(x/base, base, l)
+    else
+      list_to_string(l, base)
+    
+  private stateful function list_to_string(l : list(int), base : int) : state = 
+    put("")
+    make_string(l, base)
+    state
+    
+  private stateful function make_string(l : list(int), base : int) : list(int) =
+    if(base != 16)
+      switch(l)
+        [] => []
+        e :: l' => 
+          put(String.concat(state, Int.to_str(e))) 
+          make_string(l', base)
+    else
+      switch(l)
+        [] => []
+        e :: l' =>
+          let e  = switch(e)
+            10 => "A"
+            11 => "B"
+            12 => "C"
+            13 => "D"
+            14 => "E"
+            15 => "F"
+            e => Int.to_str(e)
+          put(String.concat(state, e))
+          make_string(l', base)
