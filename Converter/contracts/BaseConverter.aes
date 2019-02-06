@@ -26,24 +26,42 @@ contract Converter =
     let l = binary_to_dec'(0, end, x, l)
     sum(l, (x) => x)
 
+  // Convert oct to decimal
+  public function oct_to_dec(x : int) = 
+    let end : int = String.length(Int.to_str(x))
+    let l : list(int) = []
+    let l = oct_to_dec'(0, end, x, l)
+    sum(l, (x) => x)
+
   private function binary_to_dec'(begin : int, end : int, x : int, l : list(int)) : list(int) =
     if(begin < end)
       let y : int = x mod 2
+      let y' = y*2^begin
       let x = x/10
-      let l = y :: l
+      let l = y' :: l
       binary_to_dec'(begin + 1, end, x, l)
     else 
       l
 
-  function sum(l : list('a), f : 'a => int) : int =
+  private function oct_to_dec'(begin : int, end : int, x : int, l : list(int)) : list(int) =
+    if(begin < end)
+      let y : int = x mod 10
+      let y' = y*8^begin
+      let x = x/10
+      let l = y' :: l
+      oct_to_dec'(begin + 1, end, x, l)
+    else 
+      l
+
+  private function sum(l : list('a), f : 'a => int) : int =
     foldr((x, y) => x + y, 0, map(f, l))
 
-  function foldr(f : (('a, 'b) => 'b), z: 'b, l : list('a)) : 'b =
+  private function foldr(f : (('a, 'b) => 'b), z: 'b, l : list('a)) : 'b =
     switch(l)
       [] => z
       e :: l' => f(e, foldr(f, z, l'))
     
-  function map(f : 'a => 'b, l : list('a)) : list('b) =
+  private function map(f : 'a => 'b, l : list('a)) : list('b) =
     switch(l)
      [] => []
      e :: l' => f(e) :: map(f, l')
