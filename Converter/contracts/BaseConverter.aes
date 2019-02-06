@@ -5,29 +5,29 @@ contract Converter =
     ""
   
   // Convert decimal to binary
-  public function dec_to_binary(x : int) :state = 
+  public function dec_to_binary(x : int) : state = 
     let l : list(int) = []
     divide(x, 2, l)
 
   // Convert decimal to octal
-  public function dec_to_oct(x : int) :state = 
+  public function dec_to_oct(x : int) : state = 
     let l : list(int) = []
     divide(x, 8, l) 
 
   // Convert decimal to hexadecimal
-  public function dec_to_hex(x : int) :state = 
+  public function dec_to_hex(x : int) : state = 
     let l : list(int) = []
     divide(x, 16, l)
 
   // Convert binary to decimal
-  public function binary_to_dec(x : int) = 
+  public function binary_to_dec(x : int) : int = 
     let end : int = String.length(Int.to_str(x))
     let l : list(int) = []
     let l = binary_to_dec'(0, end, x, l)
     sum(l, (x) => x)
 
   // Convert oct to decimal
-  public function oct_to_dec(x : int) = 
+  public function oct_to_dec(x : int) : int = 
     let end : int = String.length(Int.to_str(x))
     let l : list(int) = []
     let l = oct_to_dec'(0, end, x, l)
