@@ -5,6 +5,7 @@ contract SmartBank =
   function init() : state =
     {}
   
+  // Deposit tokens to the contract
   public function deposit(pass : string) =
     require(Call.value > 0, "The given amount can't be 0 or negative")
     if(!user_exists(Call.caller))
@@ -14,39 +15,43 @@ contract SmartBank =
       require(hash_pwd(pass) == old_record.password, "Password hashes do not match")
       let changed_record = old_record{amount = old_record.amount + Call.value}
       put(state{[Call.caller] = changed_record})
-    true
     
-  public function withdraw(pass : string, amount : int) = // Withdraw means transfer-to-self 
+  // Withdraw means transfer-to-self 
+  public function withdraw(pass : string, amount : int) = 
     transfer(Call.caller, amount, pass)
-      
-  public function transfer(address : address, amount : int, pass : string) = // Transfer to another key 
+
+  // Transfer to another key 
+  public function transfer(address : address, amount : int, pass : string) = 
     require(user_exists(address), "User does not exist")
     require(hash_pwd(pass) == state[Call.caller].password, "Wrong password")
     require(amount =< state[Call.caller].amount, "Not enough money")
     let old_record = state[address]
     put(state{[address] = old_record{amount = old_record.amount - amount}})
     Chain.spend(address, amount)
-    
-  private function hash_pwd(pwd : string) : string = 
-    Int.to_str(String.sha3(pwd)) // hashing algorithm can be changed at any time 
-  
-  public function remove_user() =
+
+  // Remove caller from state
+  public function remove_self() =
     remove_user_by_address(Call.caller)
-     
-  private function remove_user_by_address(address : address) = 
-    require(user_exists(address),String.concat("User does not exist: ", Address.to_str(address)))
-    Chain.spend(address, state[address].amount)
-    put(Map.delete(address, state))
-    
-  function user_exists(user : address) : bool =
+
+  // Check if user exists
+  public function user_exists(user : address) : bool =
     if(Map.member(user, state))
       true
     else
       false
       
-  function check_balance() : int =
+  // Check caller balance
+  public function check_self_balance() : int =
     require(user_exists(Call.caller),String.concat("User does not exist: ", Address.to_str(Call.caller)))
     state[Call.caller].amount
+    
+  private function hash_pwd(pwd : string) : string = 
+    Int.to_str(String.sha3(pwd)) // hashing algorithm can be changed at any time 
+     
+  private function remove_user_by_address(address : address) = 
+    require(user_exists(address),String.concat("User does not exist: ", Address.to_str(address)))
+    Chain.spend(address, state[address].amount)
+    put(Map.delete(address, state))
   
   private function require(b : bool, msg : string) =
      if(!b)
